@@ -22,20 +22,10 @@ def run_web_server():
 threading.Thread(target=run_web_server, daemon=True).start()
 
 # ---------------------------------------------------------
-# 2. CONFIGURATION (Render pulls these from Environment variables)
+# 2. CONFIGURATION (Direct Credentials - Safe for Private Repos)
 # ---------------------------------------------------------
-API_TOKEN = os.getenv('9264444554:AAGo4NerLhRSdaoLFFf_vsMOwFnnOc5F02o')
-CHAT_ENV = os.getenv('9283320303')
-
-# Ensure the admin chat ID exists before trying to convert it to an integer
-if CHAT_ENV is not None:
-    MY_CHAT_ID = int(CHAT_ENV)
-else:
-    print("❌ ERROR: ADMIN_CHAT_ID environment variable is missing in Render dashboard!")
-    MY_CHAT_ID = 0  # Fallback to prevent immediate crash during configuration setup
-
-if not API_TOKEN:
-    print("❌ ERROR: API_TOKEN environment variable is missing in Render dashboard!")
+API_TOKEN = '9264444554:AAGo4NerLhRSdaoLFFf_vsMOwFnnOc5F02o'  # ⚠️ Replace this text with your real token inside the quotes
+MY_CHAT_ID = 9283320303                        # Your private numerical Telegram ID
 
 # ---------------------------------------------------------
 # 3. TELEGRAM BOT CORE ENGINE
@@ -68,7 +58,7 @@ def handle_messages(message):
             try:
                 # Extract the sender's user ID directly out of the alert text block
                 lines = message.reply_to_message.text.split("\n")
-                target_user_id = int(lines[2].split(":`")[1].replace("`", "").strip())
+                target_user_id = int(lines.split(":`").replace("`", "").strip())
                 bot.send_message(target_user_id, message.text)
                 bot.send_message(MY_CHAT_ID, "✅ Reply sent successfully!")
             except Exception as e:
