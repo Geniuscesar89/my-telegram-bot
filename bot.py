@@ -24,7 +24,7 @@ threading.Thread(target=run_web_server, daemon=True).start()
 # ---------------------------------------------------------
 # 2. CONFIGURATION (Direct Credentials - Safe for Private Repos)
 # ---------------------------------------------------------
-API_TOKEN = '9264444554:AAGo4NerLhRSdaoLFFf_vsMOwFnnOc5F02o'  # ⚠️ Replace this text with your real token inside the quotes
+API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'  # ⚠️ Replace this text with your real token inside the quotes
 MY_CHAT_ID = 9283320303                        # Your private numerical Telegram ID
 
 # ---------------------------------------------------------
