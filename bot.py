@@ -1,17 +1,49 @@
 import os
+import threading
 import telebot
 from telebot import types
+from flask import Flask
 
 # ---------------------------------------------------------
-# CONFIGURATION (Render pulls these dynamically)
+# 1. LIGHTWEIGHT WEB SERVER FOR CRON-JOB PINGS
+# ---------------------------------------------------------
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is alive and monitoring!"
+
+def run_web_server():
+    # Render automatically assigns an internal port via the PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+# Start the web server on a separate thread so it doesn't block your Telegram bot polling loop
+threading.Thread(target=run_web_server, daemon=True).start()
+
+# ---------------------------------------------------------
+# 2. CONFIGURATION (Render pulls these from Environment variables)
+# ---------------------------------------------------------
 API_TOKEN = os.getenv('9264444554:AAGo4NerLhRSdaoLFFf_vsMOwFnnOc5F02o')
-MY_CHAT_ID = int(os.getenv('9283320303'))
-# ---------------------------------------------------------
+CHAT_ENV = os.getenv('9283320303')
 
+# Ensure the admin chat ID exists before trying to convert it to an integer
+if CHAT_ENV is not None:
+    MY_CHAT_ID = int(CHAT_ENV)
+else:
+    print("❌ ERROR: ADMIN_CHAT_ID environment variable is missing in Render dashboard!")
+    MY_CHAT_ID = 0  # Fallback to prevent immediate crash during configuration setup
+
+if not API_TOKEN:
+    print("❌ ERROR: API_TOKEN environment variable is missing in Render dashboard!")
+
+# ---------------------------------------------------------
+# 3. TELEGRAM BOT CORE ENGINE
+# ---------------------------------------------------------
 bot = telebot.TeleBot(API_TOKEN)
 user_states = {}
 
-# 1. Handle the /start command
+# Handle the /start command
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     if message.chat.id == MY_CHAT_ID:
@@ -27,7 +59,7 @@ def send_welcome(message):
         )
         bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
 
-# 2. Process workflows (Safer text layout bypassing privacy restrictions)
+# Process workflows (Text layout bypassing privacy restrictions)
 @bot.message_handler(func=lambda message: True)
 def handle_messages(message):
     # IF THE MESSAGE IS FROM YOU (THE ADMIN)
@@ -77,5 +109,5 @@ def handle_messages(message):
         )
         bot.send_message(MY_CHAT_ID, chat_text, parse_mode="Markdown")
 
-print("🔒 Error-proof validation bot is booting up...")
+print("🔒 Error-proof validation bot is booting up with background ping server...")
 bot.infinity_polling()
