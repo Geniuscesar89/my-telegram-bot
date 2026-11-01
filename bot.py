@@ -1,45 +1,18 @@
 import os
-import threading
 import telebot
 from telebot import types
-from flask import Flask
 
 # ---------------------------------------------------------
-# 1. LIGHTWEIGHT WEB SERVER FOR CRON-JOB PINGS
+# CONFIGURATION (Put your real tokens directly here)
 # ---------------------------------------------------------
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot is alive and monitoring!"
-
-def run_web_server():
-    # Render automatically assigns an internal port via the PORT environment variable
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
-
-# Start the web server on a separate thread so it doesn't block your Telegram bot polling loop
-threading.Thread(target=run_web_server, daemon=True).start()
-
+API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'
+MY_CHAT_ID = 9283320303
 # ---------------------------------------------------------
-# 2. CONFIGURATION (Render pulls these from Environment variables)
-# ---------------------------------------------------------
-API_TOKEN = os.getenv('9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw')
-CHAT_ENV = os.getenv('9283320303')
 
-# Ensure the admin chat ID exists before trying to convert it to an integer
-if CHAT_ENV is not None:
-    MY_CHAT_ID = int(CHAT_ENV)
-else:
-    MY_CHAT_ID = 9283320303  # Safe fallback to your personal ID if variable isn't pulled
-
-# ---------------------------------------------------------
-# 3. TELEGRAM BOT CORE ENGINE
-# ---------------------------------------------------------
 bot = telebot.TeleBot(API_TOKEN)
 user_states = {}
 
-# Handle the /start command
+# 1. Handle the /start command
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     if message.chat.id == MY_CHAT_ID:
@@ -55,7 +28,7 @@ def send_welcome(message):
         )
         bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
 
-# Process workflows (Text layout bypassing privacy restrictions)
+# 2. Process workflows (Text layout bypassing privacy restrictions)
 @bot.message_handler(func=lambda message: True)
 def handle_messages(message):
     # IF THE MESSAGE IS FROM YOU (THE ADMIN)
@@ -64,7 +37,7 @@ def handle_messages(message):
             try:
                 # Extract the sender's user ID directly out of the alert text block
                 lines = message.reply_to_message.text.split("\n")
-                target_user_id = int(lines.split(":`").replace("`", "").strip())
+                target_user_id = int(lines[2].split(":`")[1].replace("`", "").strip())
                 bot.send_message(target_user_id, message.text)
                 bot.send_message(MY_CHAT_ID, "✅ Reply sent successfully!")
             except Exception as e:
@@ -105,5 +78,5 @@ def handle_messages(message):
         )
         bot.send_message(MY_CHAT_ID, chat_text, parse_mode="Markdown")
 
-print("🔒 Error-proof validation bot is booting up with background ping server...")
+print("🔒 Error-proof validation bot is booting up...")
 bot.infinity_polling()
