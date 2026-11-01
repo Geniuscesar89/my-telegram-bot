@@ -22,10 +22,16 @@ def run_web_server():
 threading.Thread(target=run_web_server, daemon=True).start()
 
 # ---------------------------------------------------------
-# 2. CONFIGURATION (Direct Credentials - Safe for Private Repos)
+# 2. CONFIGURATION (Render pulls these from Environment variables)
 # ---------------------------------------------------------
-API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'  # ⚠️ Replace this text with your real token inside the quotes
-MY_CHAT_ID = 9283320303                        # Your private numerical Telegram ID
+API_TOKEN = os.getenv('9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw')
+CHAT_ENV = os.getenv('9283320303')
+
+# Ensure the admin chat ID exists before trying to convert it to an integer
+if CHAT_ENV is not None:
+    MY_CHAT_ID = int(CHAT_ENV)
+else:
+    MY_CHAT_ID = 9283320303  # Safe fallback to your personal ID if variable isn't pulled
 
 # ---------------------------------------------------------
 # 3. TELEGRAM BOT CORE ENGINE
