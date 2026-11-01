@@ -1,18 +1,39 @@
 import os
+import threading
 import telebot
 from telebot import types
+from flask import Flask
 
 # ---------------------------------------------------------
-# CONFIGURATION (Put your real tokens directly here)
+# 1. PORT BINDING SERVER (Satisfies Render's Free Web Tier)
 # ---------------------------------------------------------
-API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'
-MY_CHAT_ID = 9283320303
-# ---------------------------------------------------------
+app = Flask('')
 
+@app.route('/')
+def home():
+    return "Bot status: Active and monitoring validations."
+
+def run_web_server():
+    # Render automatically tells the app which port to open via the PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+# Start the web server on a background thread so it doesn't block the Telegram bot polling loop
+threading.Thread(target=run_web_server, daemon=True).start()
+
+# ---------------------------------------------------------
+# 2. CONFIGURATION (Direct Credentials for Private Repos)
+# ---------------------------------------------------------
+API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'  # Put your active BotFather token inside these quotes
+MY_CHAT_ID = 9283320303                        # Your private numerical Telegram ID
+
+# ---------------------------------------------------------
+# 3. TELEGRAM BOT CORE ENGINE
+# ---------------------------------------------------------
 bot = telebot.TeleBot(API_TOKEN)
 user_states = {}
 
-# 1. Handle the /start command
+# Handle the /start command
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     if message.chat.id == MY_CHAT_ID:
@@ -28,7 +49,7 @@ def send_welcome(message):
         )
         bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
 
-# 2. Process workflows (Text layout bypassing privacy restrictions)
+# Process workflows (Text layout bypassing privacy restrictions)
 @bot.message_handler(func=lambda message: True)
 def handle_messages(message):
     # IF THE MESSAGE IS FROM YOU (THE ADMIN)
@@ -78,5 +99,5 @@ def handle_messages(message):
         )
         bot.send_message(MY_CHAT_ID, chat_text, parse_mode="Markdown")
 
-print("🔒 Error-proof validation bot is booting up...")
+print("🔒 Error-proof validation bot is booting up with background ping server...")
 bot.infinity_polling()
