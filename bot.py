@@ -4,100 +4,57 @@ import telebot
 from telebot import types
 from flask import Flask
 
-# ---------------------------------------------------------
-# 1. PORT BINDING SERVER (Satisfies Render's Free Web Tier)
-# ---------------------------------------------------------
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot status: Active and monitoring validations."
+    return "Bot status: Active"
 
 def run_web_server():
-    # Render automatically tells the app which port to open via the PORT environment variable
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# Start the web server on a background thread so it doesn't block the Telegram bot polling loop
 threading.Thread(target=run_web_server, daemon=True).start()
 
-# ---------------------------------------------------------
-# 2. CONFIGURATION (Direct Credentials for Private Repos)
-# ---------------------------------------------------------
-API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'  # Put your active BotFather token inside these quotes
-MY_CHAT_ID = 9283320303                        # Your private numerical Telegram ID
-
-# ---------------------------------------------------------
-# 3. TELEGRAM BOT CORE ENGINE
-# ---------------------------------------------------------
+API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'
+MY_CHAT_ID = 9283320303
 bot = telebot.TeleBot(API_TOKEN)
 user_states = {}
-
-# Handle the /start command
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     if message.chat.id == MY_CHAT_ID:
-        bot.send_message(MY_CHAT_ID, "🤖 Cloud Bot Active & Monitoring Validations.")
+        bot.send_message(MY_CHAT_ID, "🤖 Cloud Bot Active.")
     else:
         markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
         validation_button = types.KeyboardButton("🔐 Submit Referral ID Details")
         markup.add(validation_button)
-        
-        welcome_text = (
-            "Hello! Welcome to our secure verification hub.\n\n"
-            "⚠️ You must submit your referral ID details for validation before any business transaction can take place."
-        )
-        bot.send_message(message.chat.id, welcome_text, reply_markup=markup)
+        bot.send_message(message.chat.id, "Hello! Welcome.", reply_markup=markup)
 
-# Process workflows (Text layout bypassing privacy restrictions)
 @bot.message_handler(func=lambda message: True)
 def handle_messages(message):
-    # IF THE MESSAGE IS FROM YOU (THE ADMIN)
     if message.chat.id == MY_CHAT_ID:
         if message.reply_to_message and message.reply_to_message.text and "🆔 Telegram ID:" in message.reply_to_message.text:
             try:
-                # Extract the sender's user ID directly out of the alert text block
                 lines = message.reply_to_message.text.split("\n")
-                target_user_id = int(lines[2].split(":`")[1].replace("`", "").strip())
-                bot.send_message(target_user_id, message.text)
-                bot.send_message(MY_CHAT_ID, "✅ Reply sent successfully!")
+                for line in lines:
+                    if "🆔 Telegram ID:" in line:
+                        target_user_id = int(line.split("🆔 Telegram ID:")[1].replace("`", "").strip())
+                        bot.send_message(target_user_id, message.text)
+                        bot.send_message(MY_CHAT_ID, "✅ Reply sent!")
+                        break
             except Exception as e:
-                bot.send_message(MY_CHAT_ID, f"❌ Failed to reply. Error: {str(e)}")
-        else:
-            bot.send_message(MY_CHAT_ID, "⚠️ To reply, right-click/long-press the text block alert and choose 'Reply'.")
-    
-    # IF A USER CLICKS THE SUBMIT BUTTON
+                bot.send_message(MY_CHAT_ID, f"❌ Error: {str(e)}")
     elif message.text == "🔐 Submit Referral ID Details":
         user_states[message.chat.id] = "waiting_for_id"
-        instruction_text = (
-            "📝 **Please type and send your Referral ID details below:**\n\n"
-            "Once submitted, the administrator will validate your information."
-        )
-        bot.send_message(message.chat.id, instruction_text, parse_mode="Markdown")
-        
-    # IF THE USER SENDS THEIR REFERRAL ID
+        bot.send_message(message.chat.id, "📝 Send Referral ID details:")
     elif user_states.get(message.chat.id) == "waiting_for_id":
         user_states[message.chat.id] = None
-        bot.send_message(message.chat.id, "✅ Thank you! Your Referral ID has been submitted. Please wait while the admin reviews it.")
-        
-        # Hardcoded message text layout that bypasses native forward restrictions completely
-        alert_text = (
-            f"🔔 **NEW VALIDATION REQUEST**\n"
-            f"👤 User: @{message.from_user.username or 'No Username'}\n"
-            f"🆔 Telegram ID: `{message.chat.id}`\n\n"
-            f"🔑 **Submitted Referral ID:**\n{message.text}"
-        )
-        bot.send_message(MY_CHAT_ID, alert_text, parse_mode="Markdown")
-
-    # GENERAL TRAFFIC
+        bot.send_message(message.chat.id, "✅ Submitted!")
+        alert = f"🔔 **NEW REQUEST**\n👤 User: @{message.from_user.username or 'None'}\n🆔 Telegram ID: `{message.chat.id}`\n\n🔑 ID:\n{message.text}"
+        bot.send_message(MY_CHAT_ID, alert, parse_mode="Markdown")
     else:
-        chat_text = (
-            f"📩 **New Chat Message**\n"
-            f"👤 From: @{message.from_user.username or 'No Username'}\n"
-            f"🆔 Telegram ID: `{message.chat.id}`\n\n"
-            f"💬 **Message:**\n{message.text}"
-        )
+        chat_text = f"📩 **New Message**\n👤 From: @{message.from_user.username or 'None'}\n🆔 Telegram ID: `{message.chat.id}`\n\n💬 Message:\n{message.text}"
         bot.send_message(MY_CHAT_ID, chat_text, parse_mode="Markdown")
 
-print("🔒 Error-proof validation bot is booting up with background ping server...")
+print("🔒 Booting up...")
 bot.infinity_polling()
