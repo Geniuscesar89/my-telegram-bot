@@ -16,7 +16,7 @@ def run_web_server():
 
 threading.Thread(target=run_web_server, daemon=True).start()
 
-API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'
+API_TOKEN = '9040439270:AAHgaj0UjMNHEFPlltwkhDSvQHGxLRvCMZc'
 MY_CHAT_ID = 9283320303
 bot = telebot.TeleBot(API_TOKEN)
 user_states = {}
