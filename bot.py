@@ -14,12 +14,23 @@ def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
+# Spin up the Flask server to satisfy Render's health checks and your uptime monitor
 threading.Thread(target=run_web_server, daemon=True).start()
 
-API_TOKEN = '9040439270:AAHgaj0UjMNHEFPlltwkhDSvQHGxLRvCMZc'
-MY_CHAT_ID = 9283320303
+# IMPORTANT: Put your secret token and chat ID inside the quotes/variables below on GitHub
+API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'
+MY_CHAT_ID = 9283320303  # Replace with your actual numerical Chat ID
+
 bot = telebot.TeleBot(API_TOKEN)
 user_states = {}
+
+# Clear out any lingering webhook blocks to permanently resolve the 409 Conflict loop
+try:
+    print("🧹 Clearing old webhooks and conflicts...")
+    bot.remove_webhook()
+except Exception as e:
+    print(f"Note: Webhook cleanup warning: {e}")
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     if message.chat.id == MY_CHAT_ID:
@@ -56,5 +67,6 @@ def handle_messages(message):
         chat_text = f"📩 **New Message**\n👤 From: @{message.from_user.username or 'None'}\n🆔 Telegram ID: `{message.chat.id}`\n\n💬 Message:\n{message.text}"
         bot.send_message(MY_CHAT_ID, chat_text, parse_mode="Markdown")
 
-print("🔒 Booting up...")
-bot.infinity_polling()
+print("🔒 Booting up bot runner...")
+# Switched from infinity_polling to non-blocking polling execution to sync cleanly with Flask
+bot.polling(none_stop=True, interval=0)
