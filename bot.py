@@ -18,7 +18,7 @@ def run_web_server():
 threading.Thread(target=run_web_server, daemon=True).start()
 
 # IMPORTANT: Put your secret token and chat ID inside the quotes/variables below on GitHub
-API_TOKEN = '9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw'
+API_TOKEN = os.environ.get("9264444554:AAGgQ4Ja87XcpRWVKljjT-r1zwgB7R_wjQw", "")
 MY_CHAT_ID = 9283320303  # Replace with your actual numerical Chat ID
 print(f"DEBUG: Token character length is {len(API_TOKEN)}")
 
